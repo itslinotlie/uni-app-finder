@@ -20,8 +20,10 @@ public class MapScreen implements ActionListener {
     private JPanel coordPanel = new JPanel();
     private JLabel map = new JLabel();
     private JLabel circle = new JLabel();
+    private JLabel gif = new JLabel();
     private JTextArea text = new JTextArea();
-    private JButton go = new JButton("GO");
+    private JButton goMap = new JButton("GO");
+    private JButton goCoord = new JButton("BACK");
     private ImageIcon mapeh = new ImageIcon(new ImageIcon("./res/map.png").getImage().getScaledInstance(600, 360, 0));
     private Color bg = Color.decode("#072540");
     private Color highlight = Color.decode("#9C4668");
@@ -30,9 +32,12 @@ public class MapScreen implements ActionListener {
     private int x = -1, y = -1;
     private boolean reveal = false;
     public MapScreen() { //920x610
+        setupCoord();
         setupMap();
         setupFrame();
         frame.repaint();
+        System.out.println("map "+mapPanel.isVisible());
+        System.out.println("coord "+coordPanel.isVisible());
     }
     void setupFrame() {
         frame.setBounds(0, 0, 920, 610);
@@ -43,6 +48,8 @@ public class MapScreen implements ActionListener {
     void setupMap() {
         mapPanel.setLayout(null);
         mapPanel.setBackground(bg);
+        mapPanel.setVisible(true);
+        mapPanel.setBounds(0, 0, 920, 610);
         frame.add(mapPanel);
 
         Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
@@ -68,15 +75,15 @@ public class MapScreen implements ActionListener {
         otherText.setBorder(border);
         mapPanel.add(otherText);
 
-        go.setFont(new Font("Tahoma", Font.PLAIN, 32));
-        go.setBounds(800, 500, 50, 50);
-        go.setForeground(highlight);
-        go.setBackground(strongHighlight);
-        go.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        go.setBorderPainted(false);
-        go.setFocusPainted(false);
-        go.addActionListener(this);
-        mapPanel.add(go);
+        goMap.setFont(new Font("Tahoma", Font.PLAIN, 32));
+        goMap.setBounds(800, 500, 50, 50);
+        goMap.setForeground(highlight);
+        goMap.setBackground(strongHighlight);
+        goMap.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        goMap.setBorderPainted(false);
+        goMap.setFocusPainted(false);
+        goMap.addActionListener(this);
+        mapPanel.add(goMap);
 
         text.setFont(new Font("Tahoma", Font.PLAIN, 18));
         text.setBounds(400, 500, 100, 25);
@@ -110,7 +117,49 @@ public class MapScreen implements ActionListener {
             public void mouseExited(MouseEvent e) {}
         });
         mapPanel.add(map);
+
+        gif.setIcon(new ImageIcon(new ImageIcon("./res/load.gif").getImage().getScaledInstance(100, 100, 0)));
+        gif.setBounds(800, 300, 100, 100);
+        gif.setVisible(false);
+        mapPanel.add(gif);
     }
+    public void setupCoord() {
+        coordPanel.setLayout(null);
+        coordPanel.setBackground(bg);
+        coordPanel.setVisible(false);
+        coordPanel.setBounds(0, 0, 920, 610);
+        frame.add(coordPanel);
+
+        Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
+
+        JLabel header = new JLabel("University Proximity");
+        header.setFont(new Font("Tahoma", Font.BOLD, 32));
+        header.setBounds(80 , 20, 350, 75);
+        header.setForeground(highlight);
+        header.setBorder(border);
+        coordPanel.add(header);
+
+        goCoord.setFont(new Font("Tahoma", Font.PLAIN, 32));
+        goCoord.setBounds(775, 500, 100, 50);
+        goCoord.setForeground(highlight);
+        goCoord.setBackground(strongHighlight);
+        goCoord.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        goCoord.setBorderPainted(false);
+        goCoord.setFocusPainted(false);
+        goCoord.addActionListener(this);
+        coordPanel.add(goCoord);
+
+        JLabel result[] = new JLabel[12];
+        for (int i=0;i<12;i++) {
+            result[i] = new JLabel("University #"+(i+1)+": Waterloo | 500km");
+            result[i].setFont(new Font("Tahoma", Font.PLAIN, 18));
+            result[i].setForeground(highlight);
+            result[i].setBounds(50+400*(i/6), 150+50*(i%6), 400, 50);
+            result[i].setBorder(border);
+            coordPanel.add(result[i]);
+        }
+    }
+
     //this overrides the default Document to set a limit on how many characters can be in a JTextArea
     static class TextFieldLimit extends PlainDocument {
         @Override
@@ -122,19 +171,35 @@ public class MapScreen implements ActionListener {
     }
     @Override
     public void actionPerformed(ActionEvent event) {
-        if(event.getSource()==go) {
+        if(event.getSource()==goMap) {
             if(!text.getText().equals("A1B2C3") && text.getText().length()==6) {
+                gif.setVisible(true);
                 mapPanel.setVisible(reveal);
                 coordPanel.setVisible(!reveal);
-
+                System.out.println("POSTAL");
                 reveal = !reveal;
+                frame.repaint();
             }
             else if(x!=-1 && y!=-1) {
+                gif.setVisible(true);
                 mapPanel.setVisible(reveal);
                 coordPanel.setVisible(!reveal);
-
+                System.out.println("MAP");
                 reveal = !reveal;
+                System.out.println("map "+mapPanel.isVisible());
+                System.out.println("coord "+coordPanel.isVisible());
+                frame.repaint();
             }
+            gif.setVisible(false);
         }
+        else if(event.getSource()==goCoord) {
+            mapPanel.setVisible(reveal);
+            coordPanel.setVisible(!reveal);
+            reveal = !reveal;
+            System.out.println("map "+mapPanel.isVisible());
+            System.out.println("coord "+coordPanel.isVisible());
+            frame.repaint();
+        }
+        frame.repaint();
     }
 }
