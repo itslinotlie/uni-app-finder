@@ -10,34 +10,41 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class MapScreen implements ActionListener {
     public static void main(String[] args) {
         new MapScreen();
     }
+    final static double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
     private JFrame frame = new JFrame();
     private JPanel mapPanel = new JPanel();
     private JPanel coordPanel = new JPanel();
     private JLabel map = new JLabel();
-    private JLabel circle = new JLabel();
     private JLabel gif = new JLabel();
     private JTextArea text = new JTextArea();
     private JButton goMap = new JButton("GO");
     private JButton goCoord = new JButton("BACK");
-    private ImageIcon mapeh = new ImageIcon(new ImageIcon("./res/map.png").getImage().getScaledInstance(600, 360, 0));
     private Color bg = Color.decode("#072540");
     private Color highlight = Color.decode("#9C4668");
     private Color strongHighlight = Color.decode("#FF8AE2");
     private Border mapBorder = BorderFactory.createLineBorder(strongHighlight, 10);
+    private Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
     private int x = -1, y = -1;
+    private double lon = -1, lat = -1;
     private boolean reveal = false;
+
     public MapScreen() { //920x610
-        setupCoord();
         setupMap();
+        setupCoord();
         setupFrame();
         frame.repaint();
-        System.out.println("map "+mapPanel.isVisible());
-        System.out.println("coord "+coordPanel.isVisible());
     }
     void setupFrame() {
         frame.setBounds(0, 0, 920, 610);
@@ -52,8 +59,6 @@ public class MapScreen implements ActionListener {
         mapPanel.setBounds(0, 0, 920, 610);
         frame.add(mapPanel);
 
-        Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
-
         JLabel header = new JLabel("Budget Google Map");
         header.setFont(new Font("Tahoma", Font.BOLD, 32));
         header.setBounds(80 , 20, 350, 75);
@@ -61,6 +66,7 @@ public class MapScreen implements ActionListener {
         header.setBorder(border);
         mapPanel.add(header);
 
+        //To have a \n in a JLabel, you can use html's \n (<br>) to achieve the same effect
         JLabel headerText = new JLabel("<html>Click on your approximate location<br>and distance to universities will be calculated</html>");
         headerText.setFont(new Font("Tahoma", Font.PLAIN, 18));
         headerText.setBounds(500, 20, 500, 75);
@@ -75,6 +81,7 @@ public class MapScreen implements ActionListener {
         otherText.setBorder(border);
         mapPanel.add(otherText);
 
+        //map button
         goMap.setFont(new Font("Tahoma", Font.PLAIN, 32));
         goMap.setBounds(800, 500, 50, 50);
         goMap.setForeground(highlight);
@@ -85,6 +92,7 @@ public class MapScreen implements ActionListener {
         goMap.addActionListener(this);
         mapPanel.add(goMap);
 
+        //text field
         text.setFont(new Font("Tahoma", Font.PLAIN, 18));
         text.setBounds(400, 500, 100, 25);
         text.setForeground(highlight);
@@ -93,10 +101,14 @@ public class MapScreen implements ActionListener {
         text.setText("A1B2C3"); //so people know its postal code
         mapPanel.add(text);
 
+        //cursor circle to indicate where the map has been clicked
+        JLabel circle = new JLabel();
         circle.setIcon(new ImageIcon(new ImageIcon("./res/circle.png").getImage().getScaledInstance(50, 50, 0)));
         mapPanel.add(circle);
+
+        //screenshot of Google Map
         map = new JLabel();
-        map.setIcon(mapeh);
+        map.setIcon(new ImageIcon(new ImageIcon("./res/map.png").getImage().getScaledInstance(600, 360, 0)));
         map.setBounds(80, 100, 600, 360);
         map.setBorder(mapBorder);
         map.addMouseListener(new MouseListener() {
@@ -118,6 +130,7 @@ public class MapScreen implements ActionListener {
         });
         mapPanel.add(map);
 
+        //loading gif
         gif.setIcon(new ImageIcon(new ImageIcon("./res/load.gif").getImage().getScaledInstance(100, 100, 0)));
         gif.setBounds(800, 300, 100, 100);
         gif.setVisible(false);
@@ -129,8 +142,6 @@ public class MapScreen implements ActionListener {
         coordPanel.setVisible(false);
         coordPanel.setBounds(0, 0, 920, 610);
         frame.add(coordPanel);
-
-        Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
 
         JLabel header = new JLabel("University Proximity");
         header.setFont(new Font("Tahoma", Font.BOLD, 32));
@@ -169,37 +180,92 @@ public class MapScreen implements ActionListener {
             }
         }
     }
+
+    private SwingWorker worker = null;
+    private void setupWorker() {
+        worker = new SwingWorker() {
+            @Override
+            protected Void doInBackground() {
+                if(!text.getText().equals("A1B2C3") && text.getText().length()==6) {
+                    callGeocoder();
+                    try {
+                        TimeUnit.SECONDS.sleep(2);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else if (x!=-1 && y!=-1) {
+                    lon = 43.74501+(x-map.getX())/map.getX()*(43.89254-43.74501);
+                    lat = -79.20952+(y-map.getY())/map.getY()*(-79.52205+79.20952);
+                }
+                System.out.printf("(%f, %f)\n", lon, lat);
+                return null;
+            }
+            @Override
+            protected void done() {
+                gif.setVisible(false);
+                switchPanel();
+                super.done();
+            }
+        };
+    }
     @Override
     public void actionPerformed(ActionEvent event) {
         if(event.getSource()==goMap) {
-            if(!text.getText().equals("A1B2C3") && text.getText().length()==6) {
+            if((!text.getText().equals("A1B2C3") && text.getText().length()==6) || (x!=-1 && y!=-1)) {
                 gif.setVisible(true);
-                mapPanel.setVisible(reveal);
-                coordPanel.setVisible(!reveal);
-                System.out.println("POSTAL");
-                reveal = !reveal;
-                frame.repaint();
+                setupWorker();
+                worker.execute();
+                System.out.println("Boss to Carleton: "+calculateDistance(lon, lat, 45.3876, -75.6960)+"km");
             }
-            else if(x!=-1 && y!=-1) {
-                gif.setVisible(true);
-                mapPanel.setVisible(reveal);
-                coordPanel.setVisible(!reveal);
-                System.out.println("MAP");
-                reveal = !reveal;
-                System.out.println("map "+mapPanel.isVisible());
-                System.out.println("coord "+coordPanel.isVisible());
-                frame.repaint();
-            }
-            gif.setVisible(false);
         }
         else if(event.getSource()==goCoord) {
-            mapPanel.setVisible(reveal);
-            coordPanel.setVisible(!reveal);
-            reveal = !reveal;
-            System.out.println("map "+mapPanel.isVisible());
-            System.out.println("coord "+coordPanel.isVisible());
-            frame.repaint();
+            switchPanel();
         }
-        frame.repaint();
+    }
+    private void switchPanel() {
+        mapPanel.setVisible(reveal);
+        coordPanel.setVisible(!reveal);
+        reveal = !reveal;
+    }
+    private void callGeocoder() {
+        URL url = null;
+        HttpURLConnection httpCon = null;
+        BufferedReader br = null;
+        String arr[] = {};
+        try {
+            url = new URL("https://geocoder.ca/?locate="+text.getText()+"&json=1");
+            //sending http response
+            httpCon = (HttpURLConnection) url.openConnection();
+            //reading http response
+            br = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
+            arr = br.readLine().split("[,]");
+        } catch(Exception e) {
+            System.out.println("Could not connect to geocoder.ca");
+        }
+
+        for (int i=0;i<arr.length;i++) {
+            //parsing JSON into something I can read
+            arr[i] = arr[i].replaceAll("[^a-z0-9:.-]", ""); //ReGeX op
+            //tldr; the "[^a-z0-9:.-]" replaces everything that isn't a to z, 0 to 9, :, ., - with "" aka nothing
+
+            if(arr[i].startsWith("longt")) {
+                System.out.println(arr[i]);
+                lon = Double.parseDouble(arr[i].split(":")[1]);
+            }
+            if(arr[i].startsWith("latt")) {
+                System.out.println(arr[i]);
+                lat = Double.parseDouble(arr[i].split(":")[1]);
+            }
+        }
+    }
+    private double calculateDistance(double y1, double x1, double y2, double x2) {
+        double latDistance = Math.toRadians(y1 - y2);
+        double lngDistance = Math.toRadians(x1 - x2);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(y1)) * Math.cos(Math.toRadians(y2))
+                * Math.sin(lngDistance / 2) * Math.sin(lngDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double scale = 100;
+        return Math.round(AVERAGE_RADIUS_OF_EARTH_KM * c * scale) / scale;
     }
 }
