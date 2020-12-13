@@ -22,7 +22,9 @@ public class MapScreen implements ActionListener {
     public static void main(String[] args) {
         new MapScreen();
     }
-    final static double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
+    final private double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
+    final private double LATITUDE_UP = 43.89254, LATITUDE_DOWN = 43.74501;
+    final private double LONGITUDE_LEFT = -79.52205, LONGITUDE_RIGHT = -79.20952;
     private JFrame frame = new JFrame();
     private JPanel mapPanel = new JPanel();
     private JPanel coordPanel = new JPanel();
@@ -34,7 +36,7 @@ public class MapScreen implements ActionListener {
     private Color bg = Color.decode("#072540");
     private Color highlight = Color.decode("#9C4668");
     private Color strongHighlight = Color.decode("#FF8AE2");
-    private Border mapBorder = BorderFactory.createLineBorder(strongHighlight, 10);
+    private Border mapBorder = BorderFactory.createLineBorder(strongHighlight, 5); //border covers the JLabel ):
     private Border border = BorderFactory.createLineBorder(Color.BLACK, 2);
     private int x = -1, y = -1;
     private double lon = -1, lat = -1;
@@ -116,10 +118,10 @@ public class MapScreen implements ActionListener {
             public void mouseClicked(MouseEvent e) {}
             @Override
             public void mousePressed(MouseEvent e) {
-                System.out.println("SDFJKLSD"+e.getX()+" "+e.getY());
-                circle.setBounds(map.getX()+e.getX()-25, map.getY()+e.getY()-25, 50, 50);
-                x = map.getX()+e.getX()-25;
-                y = map.getY()+e.getY()-25;
+                System.out.printf("Mouse click = (%d, %d)\n", e.getX(), e.getY());
+                x = map.getX()+e.getX();
+                y = map.getY()+e.getY();
+                circle.setBounds(x-25, y-25, 50, 50);
             }
             @Override
             public void mouseReleased(MouseEvent e) {}
@@ -194,16 +196,17 @@ public class MapScreen implements ActionListener {
                         e.printStackTrace();
                     }
                 } else if (x!=-1 && y!=-1) {
-                    lon = 43.74501+(x-map.getX())/map.getX()*(43.89254-43.74501);
-                    lat = -79.20952+(y-map.getY())/map.getY()*(-79.52205+79.20952);
+                    lat = LATITUDE_UP-(double)(y-map.getY())/map.getHeight()*(LATITUDE_UP-LATITUDE_DOWN);
+                    lon = LONGITUDE_LEFT-(double)(x-map.getX())/map.getWidth()*(LONGITUDE_LEFT-LONGITUDE_RIGHT);
                 }
-                System.out.printf("(%f, %f)\n", lon, lat);
+                System.out.printf("(lat, lon) = (%f, %f)\n", lat, lon);
                 return null;
             }
             @Override
             protected void done() {
                 gif.setVisible(false);
                 switchPanel();
+                System.out.printf("Your location to Carleton: %.2fkm\n", calculateDistance(lat, lon, 45.3876, -75.6960));
                 super.done();
             }
         };
@@ -215,7 +218,6 @@ public class MapScreen implements ActionListener {
                 gif.setVisible(true);
                 setupWorker();
                 worker.execute();
-                System.out.println("Boss to Carleton: "+calculateDistance(lon, lat, 45.3876, -75.6960)+"km");
             }
         }
         else if(event.getSource()==goCoord) {
@@ -258,14 +260,16 @@ public class MapScreen implements ActionListener {
             }
         }
     }
-    private double calculateDistance(double y1, double x1, double y2, double x2) {
-        double latDistance = Math.toRadians(y1 - y2);
-        double lngDistance = Math.toRadians(x1 - x2);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(y1)) * Math.cos(Math.toRadians(y2))
-                * Math.sin(lngDistance / 2) * Math.sin(lngDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    // Haversine formula orz
+    private double calculateDistance(double startLat, double startLng, double endLat, double endLng) {
         double scale = 100;
+        double latDistance = Math.toRadians(endLat-startLat);
+        double lngDistance = Math.toRadians(endLng-startLng);
+        double a = haversin(latDistance) + haversin(lngDistance) * Math.cos(startLat) * Math.cos(endLat);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return Math.round(AVERAGE_RADIUS_OF_EARTH_KM * c * scale) / scale;
+    }
+    private double haversin(double val) {
+        return Math.pow(Math.sin(val/2), 2);
     }
 }
