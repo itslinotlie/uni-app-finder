@@ -15,6 +15,7 @@ public class UniversitiesInformation {
 	// Stores each instance in an ArrayList.
 	public UniversitiesInformation() {
 		 String[] names = new String[14];
+		 String path = new File("").getAbsolutePath();
 		 double[] overallAverages = new double[14];
 		 double[] cutoff = new double[14];
 		 int[] tuition = new int[14];
@@ -40,7 +41,7 @@ public class UniversitiesInformation {
 
 			try {
 
-				input = new Scanner(new File("uni-app-finder/resources/dataTables/All Data.csv"));
+				input = new Scanner(new File(path+"/resources/dataTables/All Data.csv"));
 				input.useDelimiter(",");
 
 
@@ -99,11 +100,11 @@ public class UniversitiesInformation {
 
 				universities.get(0).setName(universities.get(0).getName().substring(1));			//fixes error with a character before C on carleton
 				for (University uni : universities) {
-					System.out.println("uni-app-finder/resources/descriptions/" + uni.getName() + " Description.txt");
+					System.out.println(path+"/resources/descriptions/" + uni.getName() + " Description.txt");
 					try {
 						String value = "";
-						input = new Scanner(new File("uni-app-finder/resources/descriptions/" + uni.getName() + " Description.txt"));
-						System.out.println("The path is: " + "uni-app-finder/resources/descriptions/" + uni.getName() + " Description.txt"+ "|");
+						input = new Scanner(new File(path+"/resources/descriptions/" + uni.getName() + " Description.txt"));
+						System.out.println("The path is: " + path+"/resources/descriptions/" + uni.getName() + " Description.txt"+ "|");
 						while (input.hasNext()){
 
 								value = value + " " +input.next();
@@ -118,10 +119,10 @@ public class UniversitiesInformation {
 							System.out.println("File not Found :( (description)");
 						}
 
-					uni.setIcon(new ImageIcon("uni-app-finder/resources/uniPictures/" + uni.getName() + ".jpg"));
+					uni.setIcon(new ImageIcon(path+"/resources/uniPictures/" + uni.getName() + ".jpg"));
 
 					try {
-						input = new Scanner(new File("uni-app-finder/resources/keyWords/" + uni.getName() + ".txt"));
+						input = new Scanner(new File(path+"/resources/keyWords/" + uni.getName() + ".txt"));
 
 						input.useDelimiter(",");
 						keyWords.clear();
