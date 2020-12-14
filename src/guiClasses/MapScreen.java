@@ -1,12 +1,10 @@
 package guiClasses;
 
 import main.UniversitiesInformation;
-import main.University;
+import objects.UniversityDistance;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.UndoableEditListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -14,12 +12,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class MapScreen implements ActionListener {
@@ -218,15 +214,22 @@ public class MapScreen implements ActionListener {
                 gif.setVisible(false);
                 switchPanel();
                 refresh();
-                System.out.printf("Your location to Carleton: %.2fkm\n", calculateDistance(lat, lon, 45.3876, -75.6960));
+                System.out.printf("Your location to Lakehead: %.2fkm\n", calculateDistance(lat, lon, 48.4211, -89.2607));
                 super.done();
             }
         };
     }
     public void refresh() {
+        UniversityDistance distance[] = new UniversityDistance[14];
         for (int i=0;i<14;i++) {
-//            System.out.printf("%f %f | %f %f\n",lat, lon, universities.getUniversities().get(i).getLatitude(), universities.getUniversities().get(i).getLongitude());
-            result[i].setText("University #"+(i+1)+": "+universities.getUniversities().get(i).getName()+" | "+calculateDistance(lat, lon, universities.getUniversities().get(i).getLatitude(), universities.getUniversities().get(i).getLongitude())+"km");
+            double uniLat = universities.getUniversities().get(i).getLatitude();
+            double uniLon = universities.getUniversities().get(i).getLongitude();
+            distance[i] = new UniversityDistance(universities.getUniversities().get(i).getName(),
+                    calculateDistance(lat, lon, uniLat, uniLon));
+        }
+        Arrays.sort(distance);
+        for (int i=0;i<14;i++) {
+            result[i].setText(distance[i].toString());
         }
     }
     @Override
@@ -281,9 +284,11 @@ public class MapScreen implements ActionListener {
     // Haversine formula orz
     private double calculateDistance(double startLat, double startLng, double endLat, double endLng) {
         double scale = 100;
+        double RadstartLat = Math.toRadians(startLat);
+        double RadendLat = Math.toRadians(endLat);
         double latDistance = Math.toRadians(endLat-startLat);
         double lngDistance = Math.toRadians(endLng-startLng);
-        double a = haversin(latDistance) + haversin(lngDistance) * Math.cos(startLat) * Math.cos(endLat);
+        double a = haversin(latDistance) + haversin(lngDistance) * Math.cos(RadstartLat) * Math.cos(RadendLat);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return Math.round(AVERAGE_RADIUS_OF_EARTH_KM * c * scale) / scale;
     }
