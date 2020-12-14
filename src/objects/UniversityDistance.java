@@ -11,6 +11,7 @@ public class UniversityDistance implements Comparable<UniversityDistance> {
         return Double.compare(distance, uni.distance);
     }
 
+    @Override
     public String toString() {
         return name+" | "+distance+"km";
     }

@@ -1,5 +1,7 @@
 package main;
 
+import objects.UniversityDistance;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,6 +11,7 @@ import java.util.Scanner;
 public class UniversitiesInformation {
 	private ArrayList<String> keyWords = new ArrayList<>();
 	private ArrayList<University> universities = new ArrayList<>(14);
+	private ArrayList<UniversityDistance[]> distances = new ArrayList<>();
 
 	// Reads information from Universities.txt, and creates University objects for
 	// each University.
@@ -145,5 +148,9 @@ public class UniversitiesInformation {
 
 	public ArrayList<University> getUniversities() {
 		return universities;
+	}
+
+	public ArrayList<UniversityDistance[]> getUniversityDistances() {
+		return distances;
 	}
 }

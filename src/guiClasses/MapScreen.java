@@ -229,8 +229,10 @@ public class MapScreen implements ActionListener {
         }
         Arrays.sort(distance);
         for (int i=0;i<14;i++) {
+            System.out.println(distance[i]);
             result[i].setText(distance[i].toString());
         }
+        universities.getUniversityDistances().add(distance);
     }
     @Override
     public void actionPerformed(ActionEvent event) {
