@@ -54,7 +54,6 @@ public class MapScreen implements ActionListener {
     private Color bg = Color.decode("#072540");
     private Color highlight = Color.decode("#9C4668");
     private Color strongHighlight = Color.decode("#FF8AE2");
-    private Border mapBorder = BorderFactory.createLineBorder(strongHighlight, 5); //border covers the JLabel ):
 
     private SwingWorker worker = null;
 
@@ -141,7 +140,7 @@ public class MapScreen implements ActionListener {
         map = new JLabel();
         map.setIcon(new ImageIcon(new ImageIcon("./res/map.png").getImage().getScaledInstance(600, 360, 0)));
         map.setBounds(80, 100, 600, 360);
-        map.setBorder(mapBorder);
+        map.setBorder(BorderFactory.createLineBorder(strongHighlight, 5)); //border covers the JLabel ):);
         map.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
