@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -33,6 +34,7 @@ public class MapScreen implements ActionListener {
     final private double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
     final private double LATITUDE_UP = 43.89254, LATITUDE_DOWN = 43.74501;
     final private double LONGITUDE_LEFT = -79.52205, LONGITUDE_RIGHT = -79.20952;
+    final private int DISPLAY_MAP_SIZE = 50;
     private double lon = -1, lat = -1;
     private int x = -1, y = -1;
     private boolean reveal = false;
@@ -42,10 +44,12 @@ public class MapScreen implements ActionListener {
     private JPanel distancePanel = new JPanel();
     private JLabel map = new JLabel();
     private JLabel gif = new JLabel();
+    private JLabel mapPreview = new JLabel();
     private JLabel result[] = new JLabel[14];
     private JTextArea text = new JTextArea();
     private JButton goToDistance = new JButton();
     private JButton goToMap = new JButton();
+    private ImageIcon mapIcon = new ImageIcon(new ImageIcon("./res/map.png").getImage().getScaledInstance(600, 360, 0));
     private Color bg = Color.decode("#072540");
     private Color highlight = Color.decode("#9C4668");
     private Color strongHighlight = Color.decode("#FF8AE2");
@@ -191,6 +195,15 @@ public class MapScreen implements ActionListener {
         info.setBorder(border);
         distancePanel.add(info);
 
+        //cursor circle to indicate where the map has been clicked
+        JLabel circle = new JLabel();
+        circle.setIcon(new ImageIcon(new ImageIcon("./res/circle.png").getImage().getScaledInstance(50, 50, 0)));
+        circle.setBounds(500+25, 20+25, 50, 50);
+        distancePanel.add(circle);
+
+        //map preview of where the user clicked
+        mapPreview.setBounds(500, 20, DISPLAY_MAP_SIZE*2, DISPLAY_MAP_SIZE*2);
+        distancePanel.add(mapPreview);
 
         //button to direct users to the Map JPanel
         goToMap.setText("BACK");
@@ -214,9 +227,23 @@ public class MapScreen implements ActionListener {
             distancePanel.add(result[i]);
         }
     }
-
     //refreshes the lables that display the distance of universites
     public void refresh() {
+        BufferedImage mapCopy = new BufferedImage(
+                mapIcon.getIconWidth(),
+                mapIcon.getIconHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+
+        int newX = Math.min(Math.max(0, x-map.getX()-DISPLAY_MAP_SIZE), mapIcon.getIconWidth()-2*DISPLAY_MAP_SIZE);
+        int newY = Math.min(Math.max(0, y-map.getY()-DISPLAY_MAP_SIZE), mapIcon.getIconHeight()-2*DISPLAY_MAP_SIZE);
+        BufferedImage mapDisplay = mapCopy.getSubimage(newX, newY, 2*DISPLAY_MAP_SIZE, 2*DISPLAY_MAP_SIZE);
+
+        Graphics g = mapCopy.createGraphics();
+        mapIcon.paintIcon(null, g, 0, 0);
+        g.dispose();
+        mapPreview.setIcon(new ImageIcon(mapDisplay));
+
         UniversityDistance distance[] = new UniversityDistance[14];
         for (int i=0;i<14;i++) {
             double uniLat = universities.getUniversities().get(i).getLatitude();
