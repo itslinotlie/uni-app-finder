@@ -227,27 +227,14 @@ public class MapScreen implements ActionListener {
             distancePanel.add(result[i]);
         }
     }
-    //refreshes the lables that display the distance of universites
+    //refreshes the labels that display the distance of universities
+    //also updates the mapPreview of where the user clicked (not accurate for areas clicked near the border)
+    //^^ too much math to properly implement that
     public void refresh() {
-        BufferedImage mapCopy = new BufferedImage(
-                mapIcon.getIconWidth(),
-                mapIcon.getIconHeight(),
-                BufferedImage.TYPE_INT_RGB
-        );
-
-        int newX = Math.min(Math.max(0, x-map.getX()-DISPLAY_MAP_SIZE), mapIcon.getIconWidth()-2*DISPLAY_MAP_SIZE);
-        int newY = Math.min(Math.max(0, y-map.getY()-DISPLAY_MAP_SIZE), mapIcon.getIconHeight()-2*DISPLAY_MAP_SIZE);
-        BufferedImage mapDisplay = mapCopy.getSubimage(newX, newY, 2*DISPLAY_MAP_SIZE, 2*DISPLAY_MAP_SIZE);
-
-        Graphics g = mapCopy.createGraphics();
-        mapIcon.paintIcon(null, g, 0, 0);
-        g.dispose();
-        mapPreview.setIcon(new ImageIcon(mapDisplay));
-
         UniversityDistance distance[] = new UniversityDistance[14];
         for (int i=0;i<14;i++) {
             double uniLat = universities.getUniversities().get(i).getLatitude();
-            double uniLon = universities.getUniversities().get(i).getLongitude();
+            double uniLon = universities.getUnversities().get(i).getLongitude();
             distance[i] = new UniversityDistance(universities.getUniversities().get(i).getName(),
                     calculateDistance(lat, lon, uniLat, uniLon));
         }
@@ -257,6 +244,24 @@ public class MapScreen implements ActionListener {
             result[i].setText(distance[i].toString());
         }
         universities.getUniversityDistances().add(distance);
+
+        //you need a bufferedImage to get a snippet of an image
+        BufferedImage mapCopy = new BufferedImage(mapIcon.getIconWidth(),mapIcon.getIconHeight(), BufferedImage.TYPE_INT_RGB);
+
+        //creates a new bufferedImage from the actual map with proper dimensions
+        //if the user clicks on the edge, instead of having a DISPLAY_MAP_SIZE padding on one side
+        //it'll over-compensate on the other size (intended-ish)
+        int newX = Math.min(Math.max(0, x-map.getX()-DISPLAY_MAP_SIZE), mapIcon.getIconWidth()-2*DISPLAY_MAP_SIZE);
+        int newY = Math.min(Math.max(0, y-map.getY()-DISPLAY_MAP_SIZE), mapIcon.getIconHeight()-2*DISPLAY_MAP_SIZE);
+        BufferedImage mapDisplay = mapCopy.getSubimage(newX, newY, 2*DISPLAY_MAP_SIZE, 2*DISPLAY_MAP_SIZE);
+
+        //draws the updated changes onto the mapCopy
+        Graphics g = mapCopy.createGraphics();
+        mapIcon.paintIcon(null, g, 0, 0);
+        g.dispose();
+        //adding the updated BufferedImage as an icon to mapPreview
+        mapPreview.setIcon(new ImageIcon(mapDisplay));
+
     }
 
     //changes the visibility of the two panels
