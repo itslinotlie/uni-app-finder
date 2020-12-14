@@ -1,5 +1,8 @@
 package guiClasses;
 
+import main.UniversitiesInformation;
+import main.University;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentListener;
@@ -16,11 +19,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class MapScreen implements ActionListener {
     public static void main(String[] args) {
-        new MapScreen();
+        UniversitiesInformation universities = new UniversitiesInformation();
+        for(int i=0;i<14;i++) {
+            System.out.println(universities.getUniversities().get(i).getName()+" | "+universities.getUniversities().get(i).getLatitude()+" = "+universities.getUniversities().get(i).getLongitude());
+        }
+        new MapScreen(universities);
     }
     final private double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
     final private double LATITUDE_UP = 43.89254, LATITUDE_DOWN = 43.74501;
@@ -30,6 +38,7 @@ public class MapScreen implements ActionListener {
     private JPanel coordPanel = new JPanel();
     private JLabel map = new JLabel();
     private JLabel gif = new JLabel();
+    private JLabel result[] = new JLabel[14];
     private JTextArea text = new JTextArea();
     private JButton goMap = new JButton("GO");
     private JButton goCoord = new JButton("BACK");
@@ -42,7 +51,10 @@ public class MapScreen implements ActionListener {
     private double lon = -1, lat = -1;
     private boolean reveal = false;
 
-    public MapScreen() { //920x610
+    private UniversitiesInformation universities;
+
+    public MapScreen(UniversitiesInformation universities) { //920x610
+        this.universities = universities;
         setupMap();
         setupCoord();
         setupFrame();
@@ -162,12 +174,11 @@ public class MapScreen implements ActionListener {
         goCoord.addActionListener(this);
         coordPanel.add(goCoord);
 
-        JLabel result[] = new JLabel[12];
-        for (int i=0;i<12;i++) {
-            result[i] = new JLabel("University #"+(i+1)+": Waterloo | 500km");
+        for (int i=0;i<14;i++) {
+            result[i] = new JLabel();
             result[i].setFont(new Font("Tahoma", Font.PLAIN, 18));
             result[i].setForeground(highlight);
-            result[i].setBounds(50+400*(i/6), 150+50*(i%6), 400, 50);
+            result[i].setBounds(25+425*(i/7), 150+50*(i%7), 425, 50);
             result[i].setBorder(border);
             coordPanel.add(result[i]);
         }
@@ -206,10 +217,17 @@ public class MapScreen implements ActionListener {
             protected void done() {
                 gif.setVisible(false);
                 switchPanel();
+                refresh();
                 System.out.printf("Your location to Carleton: %.2fkm\n", calculateDistance(lat, lon, 45.3876, -75.6960));
                 super.done();
             }
         };
+    }
+    public void refresh() {
+        for (int i=0;i<14;i++) {
+//            System.out.printf("%f %f | %f %f\n",lat, lon, universities.getUniversities().get(i).getLatitude(), universities.getUniversities().get(i).getLongitude());
+            result[i].setText("University #"+(i+1)+": "+universities.getUniversities().get(i).getName()+" | "+calculateDistance(lat, lon, universities.getUniversities().get(i).getLatitude(), universities.getUniversities().get(i).getLongitude())+"km");
+        }
     }
     @Override
     public void actionPerformed(ActionEvent event) {

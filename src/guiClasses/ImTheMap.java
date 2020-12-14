@@ -4,6 +4,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+//test class
 public class ImTheMap {
     final static double AVERAGE_RADIUS_OF_EARTH_KM = 6371;
     
