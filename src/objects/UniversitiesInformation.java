@@ -4,6 +4,7 @@ import objects.University;
 import objects.UniversityDistance;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -51,7 +52,8 @@ public class UniversitiesInformation {
 			while (input.hasNext()) {
 				universities.add(index, new University(input.next().replaceAll("\n", "").replaceAll("\r", ""),
 						input.nextDouble(), input.nextDouble(), input.nextInt(), input.nextInt(), input.nextDouble(),
-						input.nextDouble(), input.nextInt(), input.nextInt(), input.nextDouble(), input.nextInt()));
+						input.nextDouble(), input.nextInt(), input.nextInt(), input.nextDouble(), input.nextInt(),
+						input.next(), input.nextDouble(), input.nextDouble(), input.nextDouble(), input.nextDouble()));
 				index++;
 
 			}
@@ -76,17 +78,13 @@ public class UniversitiesInformation {
 
 			input.close();
 
-			universities.get(0).setName(universities.get(0).getName().substring(1)); // fixes error with a character
-																						// before C on carleton
 			for (University uni : universities) {
-				System.out.println(path + "/resources/descriptions/" + uni.getName() + " Description.txt");
+
 				try {
 
 					String value = "";
 					input = new Scanner(
 							new File(path + "/resources/descriptions/" + uni.getName() + " Description.txt"));
-					System.out.println("The path is: " + path + "/resources/descriptions/" + uni.getName()
-							+ " Description.txt" + "|");
 					while (input.hasNext()) {
 
 						value = value + " " + input.next();
@@ -100,31 +98,33 @@ public class UniversitiesInformation {
 				}
 
 				uni.setIcon(new ImageIcon(path + "/resources/uniPictures/" + uni.getName() + ".jpg"));
+				uni.setLogo(new ImageIcon(path + "/resources/uniLogos/" + uni.getName() + ".png"));
+
+				uni.setIconImage(uni.getIcon().getImage().getScaledInstance(uni.getIcon().getIconWidth() / 2,
+						uni.getIcon().getIconHeight() / 2, 0));
+				uni.setImage(uni.getLogo().getImage().getScaledInstance(uni.getLogo().getIconWidth() / 3,
+						uni.getLogo().getIconHeight() / 3, 0));
 
 			}
-			System.out.println(universities.size());
 
 			for (University university : universities) {
 				try {
 					input = new Scanner(new File(path + "/resources/keyWords/" + university.getName() + ".txt"));
 
 					String keyWords = "";
-					System.out.println(university.getName());
+
 					while (input.hasNext()) {
 						keywords = input.next();
 
 					}
 					university.setKeywords(keywords);
-					System.out.println(keyWords);
 					input.close();
 
 				} catch (FileNotFoundException e) {
-					// System.out.println("File not Found :( (searching)");
-					System.out.println((int) university.getName().charAt(0));
+					// System.out.println((int) university.getName().charAt(0));
 				}
 
 			}
-
 		} catch (FileNotFoundException e) {
 			System.out.println("File not Found :( (all other fields)");
 		}

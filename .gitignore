@@ -1,6 +1,6 @@
-out/
+/bin/
+/out/
 *.iml
 *.idea
 *.classpath
 *.project
-/bin/
