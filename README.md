@@ -16,7 +16,11 @@ A typical high-school group project usually consists of many files being shared 
 
 ### Map Screen
 
-< Insert imgur links when the website is back on >
+<img src="https://imgur.com/uJCRNFK.png">
+
+###### The very extra loading gif that required a big detour
+
+<img src="https://imgur.com/S7QT1Vk.png">
 
 On the surface, my features/screen(s) aren't extremely impressive. Users can pinpoint their location on a map of the GTA or enter their postal code through a textbox. Afterwards, distances of the Ontario universities are calculated and displayed visually on a map of Ontario. If the user's locations fall within the map, they are shown as well. Since there was a predetermined colour theme (inspired by Hacktoberfest), the screen was visually pleasing.
 
